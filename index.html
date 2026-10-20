@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="description" content="Kalender interaktif untuk jadwal pembayaran sewa kantor, pembayaran rutin, meeting, serta task dan report." />
+  <meta name="theme-color" content="#F3F5FA" />
+  <title>Calendar</title>
+  <link rel="icon" id="favicon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='2' y='2' width='28' height='28' rx='8' fill='%233561C9'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app left-open" id="app">
+
+    <!-- ===================== NAVBAR ATAS ===================== -->
+    <header class="topbar">
+      <div class="topbar__group topbar__left">
+        <button type="button" class="icon-btn" id="btnToggleLeft" aria-label="Buka atau tutup menu kiri" aria-controls="sidebarLeft" aria-expanded="true">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+        </button>
+        <a class="brand" href="./" aria-label="Calendar">
+          <svg class="brand__logo" viewBox="0 0 40 40" aria-hidden="true">
+            <defs>
+              <clipPath id="logoClip"><rect x="3" y="4" width="34" height="33" rx="9" /></clipPath>
+            </defs>
+            <g clip-path="url(#logoClip)">
+              <rect x="3" y="4" width="34" height="33" fill="#FFFFFF" />
+              <rect x="3" y="4" width="8.5" height="9" fill="#E4826F" />
+              <rect x="11.5" y="4" width="8.5" height="9" fill="#D9A92E" />
+              <rect x="20" y="4" width="8.5" height="9" fill="#5C8DE8" />
+              <rect x="28.5" y="4" width="8.5" height="9" fill="#9878D6" />
+            </g>
+            <rect x="3.5" y="4.5" width="33" height="32" rx="8.5" fill="none" stroke="#D3D9E4" />
+            <text id="logoDay" x="20" y="30.5" text-anchor="middle" font-size="14" font-weight="700" fill="#1E2430" font-family="Plus Jakarta Sans, system-ui, sans-serif">1</text>
+          </svg>
+          <span class="brand__name">Calendar</span>
+        </a>
+      </div>
+
+      <div class="topbar__group topbar__nav">
+        <button type="button" class="btn btn--outline" id="btnToday" title="Ke hari ini (T)">Today</button>
+        <div class="nav-arrows">
+          <button type="button" class="icon-btn" id="btnPrev" aria-label="Sebelumnya">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
+          </button>
+          <button type="button" class="icon-btn" id="btnNext" aria-label="Berikutnya">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
+          </button>
+        </div>
+        <button type="button" class="period-btn" id="btnPeriod" data-popover-trigger aria-haspopup="dialog" aria-expanded="false" aria-controls="periodPicker" title="Pilih bulan dan tahun">
+          <span id="periodLabel">Calendar</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5" /></svg>
+        </button>
+      </div>
+
+      <div class="topbar__group topbar__right">
+        <button type="button" class="sync-pill" id="syncStatus" data-popover-trigger hidden title="Status sinkron Google Sheet">
+          <span class="sync-pill__dot" aria-hidden="true"></span>
+          <span class="sync-pill__text" id="syncText">Memuat…</span>
+        </button>
+        <div class="segmented" id="viewSwitch" role="group" aria-label="Pilih tampilan">
+          <button type="button" data-view="month" title="Month (M)"><span class="lg">Month</span><span class="sm">M</span></button>
+          <button type="button" data-view="week" title="Week (W)"><span class="lg">Week</span><span class="sm">W</span></button>
+          <button type="button" data-view="day" title="Day (D)"><span class="lg">Day</span><span class="sm">D</span></button>
+        </div>
+        <button type="button" class="icon-btn" id="btnToggleRight" aria-label="Buka panel pengingat" aria-controls="sidebarRight" aria-expanded="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9a6 6 0 1 1 12 0c0 6.5 2.5 8.5 2.5 8.5h-17S6 15.5 6 9" /><path d="M10.2 20.5a2 2 0 0 0 3.6 0" /></svg>
+          <span class="badge" id="bellBadge" hidden>0</span>
+        </button>
+        <button type="button" class="user-btn" id="btnUser" data-popover-trigger hidden aria-label="Akun dan sinkron" aria-haspopup="dialog" aria-controls="userPopover">
+          <span id="userInitial">?</span>
+          <span class="user-btn__dot" aria-hidden="true"></span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ===================== SIDEBAR KIRI ===================== -->
+    <aside class="sidebar sidebar--left" id="sidebarLeft" aria-label="Menu kalender">
+      <div class="sidebar__inner">
+        <div class="create-group">
+          <button type="button" class="pill pill--primary" id="btnCreate" title="Buat event baru (C)">
+            <svg class="plus-ico" viewBox="0 0 36 36" aria-hidden="true">
+              <path d="M18 18V7" stroke="#E4826F" />
+              <path d="M18 18h11" stroke="#D9A92E" />
+              <path d="M18 18v11" stroke="#5C8DE8" />
+              <path d="M18 18H7" stroke="#9878D6" />
+            </svg>
+            <span>Create</span>
+          </button>
+          <button type="button" class="pill pill--ghost" id="btnUpload" title="Impor event dari file CSV">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4M7 9l5-5 5 5" /><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" /></svg>
+            <span>Upload CSV</span>
+          </button>
+          <input type="file" id="csvInput" accept=".csv,text/csv" hidden />
+        </div>
+
+        <section class="mini" id="miniCal" aria-label="Kalender kecil"></section>
+
+        <section aria-labelledby="myCalTitle">
+          <h2 class="side-title" id="myCalTitle">My Calendars</h2>
+          <ul class="cal-filters" id="calFilters"></ul>
+          <button type="button" class="link-btn link-btn--add" id="btnAddCategory" data-action="add-category">+ Tambah kategori</button>
+          <label class="cal-filter cal-filter--plain">
+            <input type="checkbox" class="chk chk--lg" id="chkShowDone" checked />
+            <span class="cal-filter__name">Tampilkan yang sudah selesai</span>
+          </label>
+        </section>
+
+        <section aria-labelledby="branchTitle" id="branchSection">
+          <h2 class="side-title" id="branchTitle">Cabang</h2>
+          <label class="branch-filter">
+            <span class="sr-only">Tampilkan jadwal cabang</span>
+            <select id="branchFilter"></select>
+          </label>
+          <button type="button" class="link-btn link-btn--add" id="btnManageBranch" data-action="manage-branches">Kelola cabang</button>
+        </section>
+
+        <section class="summary" id="monthSummary" aria-live="polite"></section>
+
+        <section class="summary funds" id="fundsSummary" aria-live="polite"></section>
+
+        <section aria-labelledby="dataTitle">
+          <h2 class="side-title" id="dataTitle">Kelola data</h2>
+          <div class="data-actions">
+            <button type="button" class="link-btn" id="btnTemplate">Unduh template CSV</button>
+            <button type="button" class="link-btn" id="btnExport">Ekspor semua ke CSV</button>
+            <button type="button" class="link-btn" id="btnSettings" data-action="open-settings">Pengaturan pengingat</button>
+            <button type="button" class="link-btn link-btn--add" id="btnMigrate" hidden>Kirim jadwal dari browser ini ke Sheet</button>
+            <button type="button" class="link-btn" id="btnSample">Muat data contoh</button>
+            <button type="button" class="link-btn" id="btnClearSample">Hapus data contoh</button>
+            <button type="button" class="link-btn link-btn--danger" id="btnClear">Hapus data (buat ulang jadwal)</button>
+          </div>
+        </section>
+
+        <p class="shortcut-hint">
+          Pintasan: <kbd>T</kbd> hari ini, <kbd>M</kbd> <kbd>W</kbd> <kbd>D</kbd> tampilan,
+          <kbd>←</kbd> <kbd>→</kbd> geser periode, <kbd>C</kbd> buat event.
+        </p>
+      </div>
+    </aside>
+
+    <!-- ===================== AREA KALENDER ===================== -->
+    <main class="main" id="main">
+      <div class="view" id="view"></div>
+    </main>
+
+    <!-- ===================== SIDEBAR KANAN ===================== -->
+    <aside class="sidebar sidebar--right" id="sidebarRight" aria-label="Pengingat dan detail event">
+      <div class="sidebar__inner">
+        <div class="rs-card">
+          <div class="rs-tabs" role="tablist" aria-label="Panel kanan">
+            <button type="button" class="rs-tab" role="tab" id="tabReminders" data-action="tab" data-tab="reminders" aria-controls="panelReminders" aria-selected="true">
+              Pengingat <span class="rs-tab__count" id="tabRemindersCount"></span>
+            </button>
+            <button type="button" class="rs-tab" role="tab" id="tabDetail" data-action="tab" data-tab="detail" aria-controls="panelDetail" aria-selected="false">Detail</button>
+            <button type="button" class="rs-tab" role="tab" id="tabActivity" data-action="tab" data-tab="activity" aria-controls="panelActivity" aria-selected="false" hidden>Aktivitas</button>
+            <button type="button" class="icon-btn icon-btn--sm" id="btnCloseRight" aria-label="Tutup panel kanan">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+            </button>
+          </div>
+          <div class="rs-panel" id="panelReminders" role="tabpanel" aria-labelledby="tabReminders"></div>
+          <div class="rs-panel" id="panelDetail" role="tabpanel" aria-labelledby="tabDetail" hidden></div>
+          <div class="rs-panel" id="panelActivity" role="tabpanel" aria-labelledby="tabActivity" hidden></div>
+        </div>
+      </div>
+    </aside>
+
+    <div class="backdrop" id="backdrop" hidden></div>
+  </div>
+
+  <!-- ===================== MODAL: BUAT / EDIT EVENT ===================== -->
+  <dialog class="modal" id="eventModal" aria-labelledby="eventModalTitle">
+    <form class="modal__card" id="eventForm" novalidate>
+      <header class="modal__head">
+        <h2 id="eventModalTitle">Event baru</h2>
+        <button type="button" class="icon-btn icon-btn--sm" data-close aria-label="Tutup">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        </button>
+      </header>
+
+      <div class="modal__body">
+        <input class="title-input" id="fJudul" name="judul" type="text" placeholder="Tambahkan judul" autocomplete="off" maxlength="160" aria-label="Judul" />
+
+        <fieldset>
+          <legend>Kategori</legend>
+          <div class="cat-options" id="fKategori"></div>
+        </fieldset>
+
+        <div class="field-row">
+          <label class="field">
+            <span>Tanggal</span>
+            <input type="date" id="fTanggal" required />
+          </label>
+          <label class="check">
+            <input type="checkbox" class="chk chk--lg" id="fAllDay" />
+            <span>Sepanjang hari</span>
+          </label>
+        </div>
+
+        <div class="field-row" id="timeRow">
+          <label class="field">
+            <span>Mulai</span>
+            <input type="time" id="fMulai" step="300" />
+          </label>
+          <label class="field">
+            <span>Selesai</span>
+            <input type="time" id="fAkhir" step="300" />
+          </label>
+          <span class="duration-hint" id="durHint"></span>
+        </div>
+
+        <!-- Isian khusus Pembayaran Sewa -->
+        <div class="subfields" id="sewaFields" hidden>
+          <div class="field-row">
+            <label class="field">
+              <span>Cabang</span>
+              <select id="fCabang"></select>
+              <span class="field-hint" id="fCabangHint" hidden>Cabang belum ada? Admin dapat menambahkannya lewat Kelola cabang.</span>
+            </label>
+            <label class="field">
+              <span>Sub unit</span>
+              <input type="text" id="fUnit" placeholder="Mis. Gedung A" autocomplete="off" />
+            </label>
+          </div>
+          <label class="field">
+            <span>Tahap / term pembayaran</span>
+            <input type="text" id="fTahap" placeholder="Mis. Tahap 1, Deposit, Periode 2" autocomplete="off" />
+          </label>
+          <div class="field-row">
+            <label class="field">
+              <span>Masa sewa mulai</span>
+              <input type="date" id="fPeriodeMulai" />
+            </label>
+            <label class="field">
+              <span>Masa sewa selesai</span>
+              <input type="date" id="fPeriodeSelesai" />
+            </label>
+          </div>
+        </div>
+
+        <label class="field">
+          <span>Nominal (IDR)</span>
+          <span class="money">
+            <span class="money__prefix" aria-hidden="true">Rp</span>
+            <input type="text" class="money-input" id="fNominal" inputmode="numeric" placeholder="0" autocomplete="off" />
+          </span>
+        </label>
+
+        <div class="field-row" id="taxRow">
+          <label class="field">
+            <span>PPN</span>
+            <span class="money">
+              <span class="money__prefix" aria-hidden="true">Rp</span>
+              <input type="text" class="money-input" id="fPPN" inputmode="numeric" placeholder="0" autocomplete="off" />
+            </span>
+          </label>
+          <label class="field">
+            <span>PPh</span>
+            <span class="money">
+              <span class="money__prefix" aria-hidden="true">Rp</span>
+              <input type="text" class="money-input" id="fPPh" inputmode="numeric" placeholder="0" autocomplete="off" />
+            </span>
+          </label>
+        </div>
+
+        <label class="field">
+          <span>Catatan</span>
+          <textarea id="fCatatan" rows="3" placeholder="Nomor rekening, agenda rapat, PIC, dan sebagainya"></textarea>
+        </label>
+
+        <div class="field-row" id="repeatRow">
+          <label class="field">
+            <span>Ulangi</span>
+            <select id="fUlangi">
+              <option value="none">Tidak berulang</option>
+              <option value="weekly">Setiap minggu</option>
+              <option value="monthly">Setiap bulan (tanggal yang sama)</option>
+              <option value="yearly">Setiap tahun</option>
+            </select>
+          </label>
+          <label class="field field--narrow" id="jumlahWrap">
+            <span>Jumlah kejadian</span>
+            <input type="number" id="fJumlah" min="2" max="120" value="12" />
+          </label>
+        </div>
+
+        <label class="check">
+          <input type="checkbox" class="chk chk--lg" id="fStatus" />
+          <span id="fStatusLabel">Tandai sudah selesai</span>
+        </label>
+
+        <p class="form-error" id="formError" role="alert"></p>
+      </div>
+
+      <footer class="modal__foot">
+        <button type="button" class="btn btn--text" data-close>Batal</button>
+        <button type="submit" class="btn btn--primary">Simpan</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <!-- ===================== MODAL: PRATINJAU IMPOR CSV ===================== -->
+  <dialog class="modal modal--wide" id="importModal" aria-labelledby="importTitle">
+    <div class="modal__card">
+      <header class="modal__head">
+        <h2 id="importTitle">Impor CSV</h2>
+        <button type="button" class="icon-btn icon-btn--sm" data-close aria-label="Tutup">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        </button>
+      </header>
+      <div class="modal__body">
+        <div class="import-meta">
+          <p id="importFileName"></p>
+          <p class="import-columns" id="importColumns"></p>
+        </div>
+        <div class="import-options">
+          <label class="field field--import">
+            <span>Kategori</span>
+            <select id="importKategori">
+              <option value="sewa">Pembayaran Sewa</option>
+              <option value="rutin">Pembayaran Rutin</option>
+              <option value="meeting">Meeting</option>
+              <option value="task">Task/Report</option>
+            </select>
+          </label>
+          <p class="import-hint" id="importKategoriHint"></p>
+          <div class="import-mode" id="importModeWrap" hidden>
+            <span class="import-mode__title">Data dari impor sebelumnya</span>
+            <div class="import-mode__options">
+              <label class="radio-pill"><input type="radio" name="importMode" value="add" checked /><span>Tambahkan</span></label>
+              <label class="radio-pill"><input type="radio" name="importMode" value="replace" /><span>Ganti dengan file ini</span></label>
+            </div>
+            <p class="import-hint" id="importModeHint"></p>
+          </div>
+          <label class="check" id="importSamplesWrap" hidden>
+            <input type="checkbox" class="chk chk--lg" id="importSamples" />
+            <span id="importSamplesLabel">Hapus data contoh bawaan</span>
+          </label>
+          <label class="check" id="importPastWrap" hidden>
+            <input type="checkbox" class="chk chk--lg" id="importPast" />
+            <span id="importPastLabel">Tandai jatuh tempo yang sudah lewat sebagai lunas</span>
+          </label>
+          <label class="check" id="importSimilarWrap" hidden>
+            <input type="checkbox" class="chk chk--lg" id="importSimilar" />
+            <span id="importSimilarLabel">Impor juga baris yang mirip</span>
+          </label>
+        </div>
+        <div class="import-stats" id="importStats"></div>
+        <div class="table-wrap">
+          <table class="import-table">
+            <thead>
+              <tr>
+                <th scope="col">No</th>
+                <th scope="col">Status</th>
+                <th scope="col">Kategori</th>
+                <th scope="col">Judul</th>
+                <th scope="col">Jatuh tempo</th>
+                <th scope="col">Masa sewa / waktu</th>
+                <th scope="col" class="num">Nominal</th>
+                <th scope="col">Keterangan</th>
+              </tr>
+            </thead>
+            <tbody id="importBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <footer class="modal__foot">
+        <button type="button" class="btn btn--text" data-close>Batal</button>
+        <button type="button" class="btn btn--primary" id="btnDoImport">Impor</button>
+      </footer>
+    </div>
+  </dialog>
+
+  <!-- ===================== MODAL: KATEGORI TAMBAHAN ===================== -->
+  <dialog class="modal modal--small" id="categoryModal" aria-labelledby="categoryModalTitle">
+    <form class="modal__card" id="categoryForm" novalidate>
+      <header class="modal__head">
+        <h2 id="categoryModalTitle">Kategori baru</h2>
+        <button type="button" class="icon-btn icon-btn--sm" data-close aria-label="Tutup">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        </button>
+      </header>
+      <div class="modal__body">
+        <label class="field">
+          <span>Nama kategori</span>
+          <input type="text" id="cName" maxlength="40" placeholder="Mis. Kunjungan Cabang, Training, Audit" autocomplete="off" />
+        </label>
+        <fieldset>
+          <legend>Warna</legend>
+          <div class="swatches" id="cColors"></div>
+        </fieldset>
+        <label class="check">
+          <input type="checkbox" class="chk chk--lg" id="cPayment" />
+          <span>Kategori pembayaran (ada nominal, PPN/PPh, dan status Lunas)</span>
+        </label>
+        <p class="form-error" id="cError" role="alert"></p>
+      </div>
+      <footer class="modal__foot modal__foot--split">
+        <button type="button" class="btn btn--danger-text" id="cDelete" hidden>Hapus kategori</button>
+        <span class="spacer"></span>
+        <button type="button" class="btn btn--text" data-close>Batal</button>
+        <button type="submit" class="btn btn--primary" id="cSave">Simpan</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <!-- ===================== MODAL: KELOLA CABANG ===================== -->
+  <dialog class="modal" id="branchModal" aria-labelledby="branchModalTitle">
+    <div class="modal__card">
+      <header class="modal__head">
+        <h2 id="branchModalTitle">Kelola cabang</h2>
+        <button type="button" class="icon-btn icon-btn--sm" data-close aria-label="Tutup">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        </button>
+      </header>
+      <div class="modal__body">
+        <p class="modal__intro">Daftar ini dipakai di isian Cabang pada form Create dan filter cabang. Cabang baru dari Upload CSV atau dari Google Sheet otomatis ikut masuk daftar.</p>
+        <form class="branch-add" id="branchAddForm" novalidate>
+          <label class="field">
+            <span>Nama cabang baru</span>
+            <input type="text" id="bName" maxlength="60" placeholder="Mis. Sunter" autocomplete="off" />
+          </label>
+          <label class="field">
+            <span>Entitas / PT (opsional)</span>
+            <input type="text" id="bEntitas" maxlength="60" placeholder="Mis. PT WMC" list="entitasList" autocomplete="off" />
+          </label>
+          <button type="submit" class="btn btn--primary">Tambah</button>
+        </form>
+        <datalist id="entitasList"></datalist>
+        <p class="form-error" id="bError" role="alert"></p>
+        <div class="branch-toolbar">
+          <span id="branchCount"></span>
+          <label class="check check--sm" id="bShowInactiveWrap">
+            <input type="checkbox" class="chk" id="bShowInactive" />
+            <span>Tampilkan yang nonaktif</span>
+          </label>
+        </div>
+        <ul class="branch-list" id="branchList"></ul>
+      </div>
+      <footer class="modal__foot">
+        <button type="button" class="btn btn--text" data-close>Tutup</button>
+      </footer>
+    </div>
+  </dialog>
+
+  <!-- ===================== MODAL: CATAT PEMBAYARAN & BUKTI ===================== -->
+  <dialog class="modal modal--small" id="payModal" aria-labelledby="payModalTitle">
+    <form class="modal__card" id="payForm" novalidate>
+      <header class="modal__head">
+        <h2 id="payModalTitle">Catat pembayaran</h2>
+        <button type="button" class="icon-btn icon-btn--sm" data-close aria-label="Tutup">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        </button>
+      </header>
+      <div class="modal__body">
+        <div class="pay-for" id="payFor"></div>
+        <label class="field">
+          <span>Tanggal bayar</span>
+          <input type="date" id="pTanggal" />
+        </label>
+        <div class="field" id="pFileWrap">
+          <span>File bukti: gambar atau PDF (maks. 10 MB)</span>
+          <input type="file" id="pFile" class="file-input" accept="image/*,application/pdf,.pdf,.jpg,.jpeg,.png,.webp,.heic,.heif" />
+          <span class="field-hint" id="pFileHint">File disimpan di folder "Bukti Bayar Kalender" di Google Drive Admin, hanya bisa dibuka pengguna kalender.</span>
+        </div>
+        <p class="pay-current" id="pCurrent" hidden></p>
+        <label class="field">
+          <span id="pLinkLabel">Atau tempel link bukti</span>
+          <input type="url" id="pLink" placeholder="https://drive.google.com/…" autocomplete="off" />
+        </label>
+        <p class="field-hint" id="pLocalNote" hidden>Mode lokal: file bukti disimpan di browser ini saja dan tidak ikut Ekspor CSV. Agar bisa dibuka orang lain, simpan di Google Drive lalu tempel link-nya.</p>
+        <label class="field">
+          <span>Keterangan pembayaran</span>
+          <textarea id="pKet" rows="2" maxlength="300" placeholder="No. referensi transfer, bank, nama penerima"></textarea>
+        </label>
+        <label class="check">
+          <input type="checkbox" class="chk chk--lg" id="pLunas" />
+          <span>Tandai lunas</span>
+        </label>
+        <p class="form-error" id="pError" role="alert"></p>
+      </div>
+      <footer class="modal__foot modal__foot--split">
+        <button type="button" class="btn btn--danger-text" id="pClear" hidden>Hapus catatan</button>
+        <span class="spacer"></span>
+        <button type="button" class="btn btn--text" data-close>Batal</button>
+        <button type="submit" class="btn btn--primary" id="pSave">Simpan</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <!-- ===================== MODAL: REKAP KEBUTUHAN DANA ===================== -->
+  <dialog class="modal modal--wide" id="fundsModal" aria-labelledby="fundsTitle">
+    <div class="modal__card">
+      <header class="modal__head">
+        <h2 id="fundsTitle">Rekap tagihan &amp; kebutuhan dana</h2>
+        <button type="button" class="icon-btn icon-btn--sm" data-close aria-label="Tutup">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        </button>
+      </header>
+      <div class="modal__body">
+        <p class="import-meta" id="fundsNote"></p>
+        <div class="kpis" id="fundsKpis"></div>
+        <div class="funds-h-row">
+          <h3 class="funds-h">Rekap tagihan per periode</h3>
+          <label class="funds-period">
+            <span>Periode</span>
+            <select id="fundsPeriod"></select>
+          </label>
+        </div>
+        <div class="table-wrap table-wrap--auto">
+          <table class="import-table funds-table rekap-table">
+            <thead>
+              <tr>
+                <th scope="col">Periode</th>
+                <th scope="col">Kategori Jadwal</th>
+                <th scope="col" class="num">Jumlah Tagihan</th>
+                <th scope="col" class="num">Sudah Lunas</th>
+                <th scope="col" class="num">Belum Lunas</th>
+                <th scope="col">Cabang</th>
+              </tr>
+            </thead>
+            <tbody id="fundsMonths"></tbody>
+          </table>
+        </div>
+        <h3 class="funds-h">Per cabang, belum lunas s.d. 12 bulan ke depan</h3>
+        <div class="table-wrap table-wrap--auto">
+          <table class="import-table funds-table">
+            <thead>
+              <tr>
+                <th scope="col">Cabang</th>
+                <th scope="col">Entitas</th>
+                <th scope="col" class="num">Tagihan</th>
+                <th scope="col" class="num">Belum lunas</th>
+                <th scope="col">Jatuh tempo terdekat</th>
+              </tr>
+            </thead>
+            <tbody id="fundsBranches"></tbody>
+          </table>
+        </div>
+      </div>
+      <footer class="modal__foot">
+        <button type="button" class="btn btn--outline" id="btnFundsCSV">Unduh CSV</button>
+        <button type="button" class="btn btn--text" data-close>Tutup</button>
+      </footer>
+    </div>
+  </dialog>
+
+  <!-- ===================== MODAL: PENGATURAN PENGINGAT ===================== -->
+  <dialog class="modal modal--small" id="settingsModal" aria-labelledby="settingsTitle">
+    <form class="modal__card" id="settingsForm" novalidate>
+      <header class="modal__head">
+        <h2 id="settingsTitle">Pengaturan pengingat</h2>
+        <button type="button" class="icon-btn icon-btn--sm" data-close aria-label="Tutup">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        </button>
+      </header>
+      <div class="modal__body">
+        <div class="field-row">
+          <label class="field">
+            <span>Meeting, Task/Report &amp; lainnya</span>
+            <select id="sDays"></select>
+          </label>
+          <label class="field">
+            <span>Pembayaran Sewa mulai</span>
+            <select id="sSewaDays"></select>
+          </label>
+        </div>
+        <p class="field-hint">Jadwal masuk panel lonceng sejak hari yang dipilih. Pembayaran Rutin selalu diingatkan H-1 dan Hari-H saja. Pembayaran Sewa paling awal H-30 sampai jatuh tempo.</p>
+        <div class="settings-email" id="sEmailWrap">
+          <label class="check">
+            <input type="checkbox" class="chk chk--lg" id="sEmailOn" />
+            <span>Kirim email ringkasan pengingat setiap hari</span>
+          </label>
+          <div class="field-row">
+            <label class="field">
+              <span>Penerima (pisahkan dengan koma)</span>
+              <input type="text" id="sEmailTo" autocomplete="off" />
+            </label>
+            <label class="field field--narrow">
+              <span>Jam kirim</span>
+              <select id="sEmailHour"></select>
+            </label>
+          </div>
+          <p class="field-hint">Isi email: jadwal yang terlambat, jatuh tempo hari ini, 7 hari ke depan, serta pengingat awal. Email tidak dikirim pada hari yang tidak punya jadwal untuk diingatkan.</p>
+          <div><button type="button" class="btn btn--tonal" id="sTest">Kirim email uji ke saya</button></div>
+        </div>
+        <p class="field-hint" id="sLocalNote" hidden>Email pengingat harian tersedia di mode Google Sheet.</p>
+        <p class="form-error" id="sError" role="alert"></p>
+      </div>
+      <footer class="modal__foot">
+        <button type="button" class="btn btn--text" data-close>Batal</button>
+        <button type="submit" class="btn btn--primary" id="sSave">Simpan</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <!-- ===================== MODAL: HAPUS DATA (BUAT ULANG JADWAL) ===================== -->
+  <dialog class="modal modal--small" id="clearModal" aria-labelledby="clearTitle">
+    <form class="modal__card" id="clearForm" novalidate>
+      <header class="modal__head">
+        <h2 id="clearTitle">Hapus data jadwal</h2>
+        <button type="button" class="icon-btn icon-btn--sm" data-close aria-label="Tutup">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        </button>
+      </header>
+      <div class="modal__body">
+        <p class="modal__intro" id="clearIntro"></p>
+        <fieldset>
+          <legend>Kategori yang dihapus</legend>
+          <div class="clear-cats" id="clearCats"></div>
+        </fieldset>
+        <label class="field" id="clearBranchWrap">
+          <span>Cabang</span>
+          <select id="clearBranch"></select>
+        </label>
+        <label class="check">
+          <input type="checkbox" class="chk chk--lg" id="clearDone" />
+          <span>Termasuk jadwal yang sudah lunas/selesai</span>
+        </label>
+        <p class="clear-count" id="clearCount" aria-live="polite"></p>
+      </div>
+      <footer class="modal__foot modal__foot--split">
+        <button type="button" class="btn btn--outline" id="clearExport">Ekspor cadangan</button>
+        <span class="spacer"></span>
+        <button type="button" class="btn btn--text" data-close>Batal</button>
+        <button type="submit" class="btn btn--danger" id="clearSubmit">Hapus</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <!-- ===================== MODAL: KONFIRMASI ===================== -->
+  <dialog class="modal modal--small" id="confirmModal" aria-labelledby="confirmTitle">
+    <div class="modal__card">
+      <div class="modal__body confirm">
+        <h2 class="confirm__title" id="confirmTitle"></h2>
+        <p class="confirm__msg" id="confirmMsg"></p>
+      </div>
+      <footer class="modal__foot" id="confirmActions"></footer>
+    </div>
+  </dialog>
+
+  <!-- ===================== POPOVER & TOAST ===================== -->
+  <div class="popover popover--picker" id="periodPicker" role="dialog" aria-label="Pilih bulan dan tahun" hidden></div>
+  <div class="popover popover--day" id="dayPopover" role="dialog" aria-label="Semua event pada tanggal ini" hidden></div>
+  <div class="popover popover--user" id="userPopover" role="dialog" aria-label="Akun dan sinkron" hidden></div>
+
+  <!-- ===================== LAYAR LOGIN (mode Google Sheet) ===================== -->
+  <div class="login-screen" id="loginScreen" hidden>
+    <div class="login-card">
+      <svg class="login-logo" viewBox="0 0 40 40" aria-hidden="true">
+        <defs>
+          <clipPath id="loginLogoClip"><rect x="3" y="4" width="34" height="33" rx="9" /></clipPath>
+        </defs>
+        <g clip-path="url(#loginLogoClip)">
+          <rect x="3" y="4" width="34" height="33" fill="#FFFFFF" />
+          <rect x="3" y="4" width="8.5" height="9" fill="#E4826F" />
+          <rect x="11.5" y="4" width="8.5" height="9" fill="#D9A92E" />
+          <rect x="20" y="4" width="8.5" height="9" fill="#5C8DE8" />
+          <rect x="28.5" y="4" width="8.5" height="9" fill="#9878D6" />
+        </g>
+        <rect x="3.5" y="4.5" width="33" height="32" rx="8.5" fill="none" stroke="#D3D9E4" />
+      </svg>
+      <h1 class="login-title">Calendar</h1>
+      <p class="login-text">Masuk dengan akun Google yang sudah diberi akses untuk melihat dan mengelola jadwal bersama.</p>
+      <div class="login-button" id="loginButton"></div>
+      <p class="login-status" id="loginStatus" aria-live="polite"></p>
+      <p class="login-error" id="loginError" role="alert"></p>
+      <p class="login-note">Data tersimpan di Google Sheet milik Admin. Belum punya akses? Hubungi Admin kalender.</p>
+    </div>
+  </div>
+  <div class="toast-stack" id="toasts" aria-live="polite"></div>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
